@@ -1,0 +1,96 @@
+name: Local CI
+
+on:
+  push:
+    paths:
+      - ".forgejo/workflows/**"
+      - "src/**"
+      - "tests/**"
+      - "vendor/ghostmcp"
+      - "pyproject.toml"
+      - "requirements.txt"
+  pull_request:
+    paths:
+      - ".forgejo/workflows/**"
+      - "src/**"
+      - "tests/**"
+      - "vendor/ghostmcp"
+      - "pyproject.toml"
+      - "requirements.txt"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: local-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  quality:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install project and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[dev,anthropic,gemini,ghostmcp]' -e vendor/ghostmcp
+
+      - name: Run tests
+        run: python -m pytest tests -q
+
+      - name: Compile package sources
+        run: python -m compileall -q src/ares
+
+  package-smoke:
+    name: Package smoke
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Build wheel and source distribution
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build
+
+      - name: Smoke-test installed wheel
+        run: |
+          python -m venv /tmp/ares-wheel-smoke
+          . /tmp/ares-wheel-smoke/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install dist/*.whl
+          ares --version
+          ares doctor
+          ares dashboard --help
+          ares-dashboard --help
