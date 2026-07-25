@@ -25,7 +25,7 @@ jobs:
       - name: Scan for secrets
         run: |
           docker run --rm -v "$PWD:/repo:ro" zricethezav/gitleaks:v8.24.2 \
-            detect --source=/repo --config=/repo/.gitleaks.toml --no-banner --redact
+            dir /repo --config=/repo/.gitleaks.toml --no-banner --redact
 
       - name: Install project
         run: |
