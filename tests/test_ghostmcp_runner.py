@@ -31,19 +31,19 @@ class GhostMCPRunnerSchemaTests(unittest.TestCase):
         from lib.ghostmcp_runner import GhostMCPToolRunner
 
         runner = GhostMCPToolRunner(transport="inproc")
-        security = runner.tools["smbmap"]["security"]
+        security = runner.tools["runtime_probe"]["security"]
 
         self.assertEqual(security["manifest_schema"], "1.0")
         self.assertEqual(security["server_version"], "0.2.0")
-        self.assertEqual(security["risk"], "intrusive")
-        self.assertIn("credential_access", security["capabilities"])
+        self.assertEqual(security["risk"], "passive")
+        self.assertIn("discovery", security["capabilities"])
         runner.close()
 
     def test_external_bridge_preserves_security_manifest(self):
         from lib.ghostmcp_runner import GhostMCPToolRunner
 
         runner = GhostMCPToolRunner(transport="external-stdio")
-        security = runner.tools["smbmap"]["security"]
+        security = runner.tools["runtime_probe"]["security"]
 
         self.assertEqual(security["manifest_schema"], "1.0")
         self.assertEqual(security["server_version"], "0.2.0")
