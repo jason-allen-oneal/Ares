@@ -1,1 +1,0 @@
-# ARES Mission Swarm Package

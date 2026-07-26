@@ -1,5 +1,0 @@
-pyside6
-openai
-jsonschema
-typer
--e vendor/ghostmcp

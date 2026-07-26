@@ -1,3 +1,0 @@
-[submodule "vendor/ghostmcp"]
-	path = vendor/ghostmcp
-	url = https://github.com/jason-allen-oneal/ghostmcp.git

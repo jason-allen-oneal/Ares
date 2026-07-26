@@ -1,1 +1,0 @@
-api_key = "FAKE_SECRET_FOR_ARES_TEST_ONLY"
