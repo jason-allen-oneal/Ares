@@ -68,7 +68,7 @@ jobs:
           python -m json.tool /tmp/ares-support-bundle.json >/dev/null
           ares dashboard --help
           ares-dashboard --help
-          ares mission run --help | grep -F -- '--approval-receipts'
+          python -c "from typer.main import get_command; from ares.cli import app; run = get_command(app).commands['mission'].commands['run']; assert any('--approval-receipts' in getattr(param, 'opts', []) for param in run.params)"
           ares route --target 127.0.0.1 --prompt "safe local smoke test"
           ares training --out /tmp/ares-sft-smoke.jsonl --min-status final_response
 
