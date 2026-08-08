@@ -1,0 +1,121 @@
+name: Ares 1.1 release preflight
+
+on:
+  push:
+    branches:
+      - productize/ares-1.1.0
+    paths:
+      - .github/workflows/release-preflight.yml
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+  artifact-metadata: write
+
+jobs:
+  release-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out release candidate
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install release tooling and project
+        run: |
+          python -m pip install --upgrade pip build twine cyclonedx-bom==7.3.0
+          python -m pip install -e '.[dev,anthropic,gemini,ghostmcp]' -e vendor/ghostmcp
+
+      - name: Verify release identity
+        run: |
+          test "$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["name"])')" = "bluedot-ares"
+          test "$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')" = "1.1.0"
+          test "$(python -c 'import ares; print(ares.__version__)')" = "1.1.0"
+
+      - name: Build and validate distributions
+        run: |
+          rm -rf dist build src/*.egg-info
+          python -m build
+          python -m twine check dist/*
+          test -n "$(find dist -maxdepth 1 -name 'bluedot_ares-1.1.0-py3-none-any.whl' -print -quit)"
+          test -n "$(find dist -maxdepth 1 -name 'bluedot_ares-1.1.0.tar.gz' -print -quit)"
+
+      - name: Smoke-test installed wheel
+        run: |
+          python -m venv /tmp/ares-release-preflight
+          . /tmp/ares-release-preflight/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install dist/*.whl
+          test "$(ares --version)" = "1.1.0"
+          ares doctor --json | python -m json.tool >/dev/null
+          ares support-bundle --out /tmp/ares-support-bundle.json
+          python -m json.tool /tmp/ares-support-bundle.json >/dev/null
+
+      - name: Generate SBOM and release metadata
+        env:
+          GITHUB_REF_NAME: v1.1.0
+        run: |
+          cyclonedx-py environment \
+            --output-format JSON \
+            --output-reproducible \
+            --output-file "dist/bluedot-ares-${GITHUB_REF_NAME}.cdx.json" \
+            /tmp/ares-release-preflight/bin/python
+          python - <<'PY'
+          import json
+          import os
+          import tomllib
+          from pathlib import Path
+
+          project = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))["project"]
+          Path("dist/release-metadata.json").write_text(
+              json.dumps(
+                  {
+                      "project": project["name"],
+                      "product": "Ares",
+                      "version": project["version"],
+                      "tag": os.environ["GITHUB_REF_NAME"],
+                      "commit": os.environ["GITHUB_SHA"],
+                      "repository": os.environ["GITHUB_REPOSITORY"],
+                  },
+                  indent=2,
+                  sort_keys=True,
+              ) + "\n",
+              encoding="utf-8",
+          )
+          PY
+          (
+            cd dist
+            sha256sum *.whl *.tar.gz *.cdx.json release-metadata.json > SHA256SUMS
+            sha256sum -c SHA256SUMS
+          )
+
+      - name: Attest build provenance
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            dist/*.whl
+            dist/*.tar.gz
+
+      - name: Attest release SBOM
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            dist/*.whl
+            dist/*.tar.gz
+          sbom-path: dist/bluedot-ares-v1.1.0.cdx.json
+
+      - name: Upload preflight payload
+        uses: actions/upload-artifact@v7
+        with:
+          name: ares-1.1.0-release-preflight
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
