@@ -1,0 +1,98 @@
+name: Bug report
+description: Report a reproducible defect in supported Ares behavior
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include credentials, tokens, pairing codes, approval receipts, engagement policies, client evidence, private target data, or populated Ares databases.
+
+  - type: checkboxes
+    id: authorization
+    attributes:
+      label: Safety confirmation
+      options:
+        - label: This report does not request help testing a system without explicit authorization.
+          required: true
+        - label: I removed secrets, client data, and real engagement evidence.
+          required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Ares version
+      description: Output from `ares --version`.
+      placeholder: 1.1.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Operator surface
+      options:
+        - CLI
+        - TUI
+        - Dashboard
+        - Gateway API
+        - Packaging or installation
+        - Mission runtime
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, architecture, Python version, and installation method.
+      placeholder: Debian 13 x86_64, Python 3.12, pipx
+    validations:
+      required: true
+
+  - type: input
+    id: provider
+    attributes:
+      label: Model provider family
+      description: Provider family only. Do not include keys, tokens, account IDs, or credential paths.
+      placeholder: local, OpenAI-compatible, OpenAI, Anthropic, Gemini, or none
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      description: Use a loopback, lab, documentation-range, or intentionally vulnerable target.
+      placeholder: |
+        1. Run ...
+        2. Configure ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Redacted diagnostics
+      description: Include relevant `ares doctor` output or logs after removing sensitive data.
+      render: text
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
