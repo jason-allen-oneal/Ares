@@ -1,4 +1,5 @@
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -9,6 +10,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from typer.testing import CliRunner
 
 from ares.cli import app
+
+
+_ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
 
 
 class ProductizationCliTests(unittest.TestCase):
@@ -56,10 +60,15 @@ class ProductizationCliTests(unittest.TestCase):
         self.assertNotIn("approval_receipt", serialized)
 
     def test_nested_mission_run_exposes_approval_receipts(self):
-        result = self.runner.invoke(app, ["mission", "run", "--help"])
+        result = self.runner.invoke(
+            app,
+            ["mission", "run", "--help"],
+            env={"NO_COLOR": "1", "TERM": "dumb"},
+        )
 
         self.assertEqual(result.exit_code, 0, result.output)
-        self.assertIn("--approval-receipts", result.output)
+        normalized = _ANSI_ESCAPE.sub("", result.output)
+        self.assertIn("--approval-receipts", normalized)
 
 
 if __name__ == "__main__":
