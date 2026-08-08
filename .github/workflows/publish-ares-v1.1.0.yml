@@ -1,0 +1,85 @@
+name: Publish Ares v1.1.0 tag
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-ares-v1.1.0.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-ares-v1.1.0-tag
+  cancel-in-progress: false
+
+jobs:
+  publish-tag:
+    if: github.repository == 'jason-allen-oneal/Ares'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify canonical commit and create release tag
+        env:
+          ORG_SYNC_TOKEN: ${{ secrets.ORG_SYNC_TOKEN }}
+          EXPECTED_SHA: ad4a198a741d0fb7fc138f0e8144345845e87aa9
+          TAG_NAME: v1.1.0
+        run: |
+          set -euo pipefail
+
+          if [ -z "${ORG_SYNC_TOKEN}" ]; then
+            echo "ORG_SYNC_TOKEN is not configured." >&2
+            exit 1
+          fi
+
+          api="https://api.github.com/repos/BlueDot-IT/Ares"
+          auth_header="Authorization: Bearer ${ORG_SYNC_TOKEN}"
+          version_header="X-GitHub-Api-Version: 2022-11-28"
+
+          actual_sha="$({
+            curl --fail --silent --show-error \
+              -H "${auth_header}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "${version_header}" \
+              "${api}/commits/main"
+          } | jq -r '.sha')"
+
+          if [ "${actual_sha}" != "${EXPECTED_SHA}" ]; then
+            echo "Refusing release: BlueDot-IT/Ares:main is ${actual_sha}, expected ${EXPECTED_SHA}." >&2
+            exit 1
+          fi
+
+          tag_status="$({
+            curl --silent --show-error \
+              --output /tmp/ares-tag-response.json \
+              --write-out '%{http_code}' \
+              -H "${auth_header}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "${version_header}" \
+              "${api}/git/ref/tags/${TAG_NAME}"
+          })"
+
+          if [ "${tag_status}" = "200" ]; then
+            echo "Refusing release: ${TAG_NAME} already exists." >&2
+            cat /tmp/ares-tag-response.json >&2
+            exit 1
+          fi
+
+          if [ "${tag_status}" != "404" ]; then
+            echo "Unable to verify tag absence; GitHub returned HTTP ${tag_status}." >&2
+            cat /tmp/ares-tag-response.json >&2
+            exit 1
+          fi
+
+          payload="$(jq -nc \
+            --arg ref "refs/tags/${TAG_NAME}" \
+            --arg sha "${EXPECTED_SHA}" \
+            '{ref: $ref, sha: $sha}')"
+
+          curl --fail --silent --show-error \
+            --request POST \
+            -H "${auth_header}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "${version_header}" \
+            "${api}/git/refs" \
+            --data "${payload}" \
+            | jq '{ref, object}'
