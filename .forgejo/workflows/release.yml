@@ -67,7 +67,7 @@ jobs:
           python -m pip install dist/*.whl
           test "$(ares --version)" = "${GITHUB_REF_NAME#v}"
           ares doctor --json | python -m json.tool >/dev/null
-          ares mission run --help | grep -F -- '--approval-receipts'
+          python -c "from typer.main import get_command; from ares.cli import app; run = get_command(app).commands['mission'].commands['run']; assert any('--approval-receipts' in getattr(param, 'opts', []) for param in run.params)"
 
       - name: Generate SBOM, metadata, and checksums
         run: |
