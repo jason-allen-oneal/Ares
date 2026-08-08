@@ -1,0 +1,80 @@
+name: Installation or support request
+description: Request help with a supported installation or operator workflow
+title: "[Support]: "
+labels:
+  - support
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Run `ares doctor` first. Do not include API keys, OAuth tokens, gateway sessions, pairing codes, engagement policies, approval receipts, target evidence, reports, or database files.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I reviewed INSTALL.md and SUPPORT.md.
+          required: true
+        - label: I ran `ares doctor` and redacted sensitive output.
+          required: true
+        - label: This request concerns an authorized workflow.
+          required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Ares version
+      placeholder: Output from `ares --version`
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: Ubuntu 24.04 x86_64, Python 3.12, uv tool
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: Installation method
+      options:
+        - pipx
+        - uv tool
+        - GitHub release wheel
+        - editable source checkout
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Command that failed
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: error
+    attributes:
+      label: Exact redacted error
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Redacted `ares doctor` output
+      render: text
+
+  - type: textarea
+    id: attempted
+    attributes:
+      label: Troubleshooting already attempted
+    validations:
+      required: true
