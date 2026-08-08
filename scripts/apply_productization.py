@@ -135,8 +135,8 @@ def support_bundle(
         "nested approval receipt forwarding",
     )
 
-    if text.count("--approval-receipts") != 2:
-        raise RuntimeError("expected direct and nested approval receipt options")
+    if text.count("--approval-receipts") != 3:
+        raise RuntimeError("expected direct, nested, and validation-message receipt references")
     if "@app.command(\"support-bundle\")" not in text:
         raise RuntimeError("support-bundle command was not inserted")
 
