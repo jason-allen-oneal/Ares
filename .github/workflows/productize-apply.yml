@@ -68,7 +68,7 @@ jobs:
           ares doctor --json | python -m json.tool >/dev/null
           ares support-bundle --out /tmp/ares-support-bundle.json
           python -m json.tool /tmp/ares-support-bundle.json >/dev/null
-          ares mission run --help | grep -F -- '--approval-receipts'
+          python -c "from typer.main import get_command; from ares.cli import app; run = get_command(app).commands['mission'].commands['run']; assert any('--approval-receipts' in getattr(param, 'opts', []) for param in run.params)"
           python -c "import importlib.metadata as m; assert m.version('bluedot-ares') == '1.1.0'"
 
       - name: Commit validated patch
