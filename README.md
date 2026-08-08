@@ -8,5 +8,6 @@ previous source remains available in this repository's Git history.
 ## Repository bridge
 
 The protected `org-sync` branch is the controlled source mirrored into
-`BlueDot-IT/Ares:main`. Product changes are reviewed and validated on that
-branch before the bridge updates the canonical organization repository.
+`BlueDot-IT/Ares:main`. Product and release changes are reviewed and validated
+on that branch before the bridge updates the canonical organization repository.
+Release tags and artifacts are published only from the canonical repository.
