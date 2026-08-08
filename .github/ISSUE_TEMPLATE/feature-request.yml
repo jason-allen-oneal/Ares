@@ -1,0 +1,74 @@
+name: Feature request
+description: Propose a product, operator, integration, or runtime improvement
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ares is operator-supervised. Requests that bypass scope, approval, evidence, or policy enforcement will not be accepted.
+
+  - type: checkboxes
+    id: boundary
+    attributes:
+      label: Product boundary
+      options:
+        - label: This request is for authorized security assessment use.
+          required: true
+        - label: This request does not require moving authorization or risk decisions into the model.
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Operator problem
+      description: Describe the concrete workflow or failure this feature should address.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe observable behavior, not only an implementation preference.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Primary surface
+      options:
+        - CLI
+        - TUI
+        - Dashboard
+        - Gateway API
+        - Runtime or dispatcher
+        - Mission system
+        - Tool integration
+        - Evidence or reporting
+        - Packaging or release
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: security
+    attributes:
+      label: Security-boundary impact
+      description: Explain changes to scope, risk, approvals, evidence, persistence, routing, or external tools.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List the conditions that would make the request complete and testable.
